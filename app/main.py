@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from app.db.deps import get_db
+from app.api.documents import router as documents_router
 
 app = FastAPI(title="Recall", version="0.1.0")
 
@@ -15,3 +17,6 @@ def health():
 def health_db(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
+
+app.include_router(documents_router)
