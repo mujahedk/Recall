@@ -1,6 +1,8 @@
 # Runtime storage (PDFs, extracted pages, FAISS index)
 storage/
-fixtures/
+
+# Sample PDFs — download with: make fixture
+fixtures/*.pdf
 
 # Environment / secrets
 .env

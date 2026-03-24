@@ -2,7 +2,7 @@ PYTHON  = python3.12
 VENV    = .venv
 BIN     = $(VENV)/bin
 
-.PHONY: install db migrate dev seed benchmark reset demo
+.PHONY: install db migrate dev fixture seed benchmark reset demo
 
 # ── One-time setup ────────────────────────────────────────────────────────────
 
@@ -39,6 +39,11 @@ demo: reset seed
 
 reset:
 	$(BIN)/python scripts/reset.py
+
+fixture:
+	mkdir -p fixtures
+	curl -L https://arxiv.org/pdf/1706.03762 -o fixtures/sample.pdf
+	@echo "Saved to fixtures/sample.pdf"
 
 seed:
 	$(BIN)/python scripts/seed_sample.py
