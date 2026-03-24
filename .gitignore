@@ -1,5 +1,6 @@
 # Runtime storage (PDFs, extracted pages, FAISS index)
 storage/
+fixtures/
 
 # Environment / secrets
 .env
