@@ -5,7 +5,8 @@ Semantic document search and RAG (Retrieval-Augmented Generation) built with Fas
 Upload PDFs → they are parsed, chunked, and embedded → ask questions → get grounded answers with page-level citations.
 
 ---
-
+## Dashboard
+![Recall Empty Dashboard](demo-photos/recall-empty-dashboard.png)
 ## What it does
 
 1. **Ingest**: Upload a PDF. The pipeline extracts text page-by-page (PyMuPDF), splits it into overlapping 1200-character windows, and stores each chunk in PostgreSQL with its page range.
@@ -77,9 +78,13 @@ uvicorn app.main:app --reload
 
 1. Open `http://localhost:8000`
 2. Upload one or more PDFs — the pipeline runs automatically (extract → chunk → embed → index)
-3. Type a question in the **Ask** tab
+3. Type a question in the **Ask** tab (if able, will answer, if not, does not hallucinate responses)
+![Recall Question Asked](demo-photos/recall-question-asked.png)
+![Recall Bad Question](demo-photos/recall-bad-question.png)
 4. The answer appears with numbered citations: document title, page range, cosine score, and snippet
+![Recall Cited Sources](demo-photos/recall-cited-sources.png)
 5. Switch to the **Search** tab to see raw FAISS retrieval results without generation
+![Recall Semantic Search](demo-photos/recall-semantic-search.png)
 
 ### Via the API
 
@@ -159,31 +164,6 @@ docs/           # Architecture, resume alignment, demo script
 See [docs/architecture.md](docs/architecture.md) for the full ingestion pipeline, RAG flow, data model, and design tradeoffs.
 
 ---
-
-## Deployment
-
-### What cannot go on Vercel
-
-Vercel is a serverless edge platform — it does not support:
-- Long-running processes (uvicorn)
-- Persistent disk (FAISS index + uploaded PDFs in `storage/`)
-- PostgreSQL (no built-in relational DB)
-
-Recall needs a traditional server or container hosting.
-
-### Recommended: Railway
-
-1. Push the repo to GitHub.
-2. Create a Railway project and add a **PostgreSQL** plugin.
-3. Add a service from the repo root — Railway detects the `Dockerfile` automatically.
-4. Set environment variables: `DATABASE_URL` (from the Postgres plugin), `OPENAI_API_KEY`.
-5. Add a **volume** mounted at `/app/storage` so the FAISS index and PDFs survive deployments.
-6. After the first deploy, run `alembic upgrade head` via the Railway shell or as a release command.
-
-### Other options
-
-- **Render**: Docker deploy + managed Postgres + disk. Same approach as Railway.
-- **Fly.io**: `fly launch` detects the Dockerfile. Add a Fly volume for `/app/storage`. Use `fly postgres` for the DB.
 
 ### Storage in production
 
