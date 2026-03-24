@@ -7,6 +7,7 @@ Upload PDFs → they are parsed, chunked, and embedded → ask questions → get
 ---
 ## Dashboard
 ![Recall Empty Dashboard](demo-photos/recall-empty-dashboard.png)
+
 ## What it does
 
 1. **Ingest**: Upload a PDF. The pipeline extracts text page-by-page (PyMuPDF), splits it into overlapping 1200-character windows, and stores each chunk in PostgreSQL with its page range.
@@ -79,11 +80,17 @@ uvicorn app.main:app --reload
 1. Open `http://localhost:8000`
 2. Upload one or more PDFs — the pipeline runs automatically (extract → chunk → embed → index)
 3. Type a question in the **Ask** tab (if able, will answer, if not, does not hallucinate responses)
+
 ![Recall Question Asked](demo-photos/recall-question-asked.png)
+
 ![Recall Bad Question](demo-photos/recall-bad-question.png)
+
 4. The answer appears with numbered citations: document title, page range, cosine score, and snippet
+
 ![Recall Cited Sources](demo-photos/recall-cited-sources.png)
+
 5. Switch to the **Search** tab to see raw FAISS retrieval results without generation
+
 ![Recall Semantic Search](demo-photos/recall-semantic-search.png)
 
 ### Via the API
