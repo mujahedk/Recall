@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recall</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        font-family: system-ui, -apple-system, Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f8f9fa;
+        color: #1a1a1a;
+      }
+
+      h1 { margin: 0 0 4px; font-size: 1.6rem; }
+      h3 { margin: 0 0 12px; font-size: 1rem; font-weight: 600; }
+
+      .subtitle { color: #666; font-size: 14px; margin: 0 0 24px; }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      /* --- Upload --- */
+      .upload-form input[type="file"] { display: block; margin-bottom: 10px; }
+
+      /* --- Document list --- */
+      .doc-list { margin-top: 12px; }
+
+      .doc-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .doc-item:last-child { border-bottom: none; }
+
+      .doc-name { font-weight: 500; font-size: 14px; }
+      .doc-meta { font-size: 12px; color: #888; margin-top: 2px; }
+
+      .status-badge {
+        display: inline-block;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .status-ready    { background: #d1fae5; color: #065f46; }
+      .status-processing { background: #fef3c7; color: #92400e; }
+      .status-failed   { background: #fee2e2; color: #991b1b; }
+      .status-uploaded { background: #e0e7ff; color: #3730a3; }
+
+      /* Advanced (manual extract/chunk) */
+      details { margin-top: 8px; }
+      details summary {
+        font-size: 12px;
+        color: #999;
+        cursor: pointer;
+        user-select: none;
+      }
+      .advanced-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+
+      /* --- Index status bar --- */
+      .index-bar {
+        margin-top: 16px;
+        padding: 10px 12px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #0369a1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .index-bar.empty { background: #fef9c3; border-color: #fde68a; color: #854d0e; }
+
+      /* --- Tab bar --- */
+      .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+
+      .tab-btn {
+        padding: 7px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f6f6f6;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #444;
+      }
+      .tab-btn.active {
+        background: #1a1a1a;
+        color: #fff;
+        border-color: #1a1a1a;
+      }
+
+      /* --- Shared input/button --- */
+      .query-row { display: flex; gap: 8px; margin-bottom: 16px; }
+      .query-row input[type="text"] {
+        flex: 1;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+
+      button, .btn {
+        padding: 9px 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #f6f6f6;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      button:hover { background: #eee; }
+
+      /* --- Answer panel --- */
+      .answer-text {
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 16px;
+      }
+
+      .citation-list { display: flex; flex-direction: column; gap: 10px; }
+
+      .citation-item {
+        background: #f8f9fa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      .citation-header {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .citation-n { font-weight: 700; color: #1a1a1a; }
+      .citation-title { font-weight: 600; }
+      .citation-pages { color: #666; }
+      .citation-score {
+        margin-left: auto;
+        font-size: 11px;
+        color: #888;
+        font-variant-numeric: tabular-nums;
+      }
+      .citation-snippet { color: #555; line-height: 1.5; }
+
+      /* --- Search hits --- */
+      .search-hits { display: flex; flex-direction: column; gap: 10px; }
+
+      .hit-item {
+        background: #f8f9fa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      .hit-header {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+      }
+      .hit-score {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        color: #0369a1;
+        font-variant-numeric: tabular-nums;
+      }
+      .hit-doc { font-weight: 600; }
+      .hit-pages { color: #666; }
+      .hit-snippet { color: #555; line-height: 1.5; }
+
+      /* --- Action row (rebuild/clear) --- */
+      .action-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .btn-danger {
+        border-color: #fca5a5;
+        color: #991b1b;
+        background: #fff5f5;
+      }
+      .btn-danger:hover { background: #fee2e2; }
+
+      /* --- Panel label --- */
+      .panel-label {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      @media (max-width: 700px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:4px;">
+      <h1 style="margin:0;">Recall</h1>
+      <a href="/docs" target="_blank" style="font-size:13px; color:#0369a1; text-decoration:none;">API docs &rarr;</a>
+    </div>
+    <p class="subtitle">Upload PDFs &rarr; extract &rarr; chunk &rarr; embed &rarr; ask with citations</p>
+
+    <div class="layout">
+
+      <!-- Left: documents & controls -->
+      <div class="card">
+        <h3>Upload PDF</h3>
+        <form class="upload-form" action="/ui/upload" method="post" enctype="multipart/form-data">
+          <input type="file" name="files" multiple accept=".pdf" required />
+          <button type="submit">Upload &amp; Process</button>
+        </form>
+
+        <!-- Index status -->
+        {% if index_size > 0 %}
+        <div class="index-bar">
+          <span>&#x2713; Index ready</span>
+          <span><b>{{ index_size }}</b> vectors</span>
+        </div>
+        {% else %}
+        <div class="index-bar empty">
+          &#x26A0;&#xFE0F; No index &mdash; upload a PDF first
+        </div>
+        {% endif %}
+
+        <!-- Document list -->
+        {% if docs %}
+        <div class="doc-list">
+          <div style="font-size:12px; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.06em; font-weight:600;">Documents ({{ docs|length }})</div>
+          {% for d in docs %}
+          <div class="doc-item">
+            <div class="doc-name">{{ d.title or "Untitled" }}</div>
+            <div class="doc-meta">
+              <span class="status-badge status-{{ d.status }}">{{ d.status }}</span>
+              {% if d.page_count %}
+              &nbsp;{{ d.page_count }} pages
+              {% endif %}
+              {% if chunk_counts.get(d.id) %}
+              &middot; {{ chunk_counts[d.id] }} chunks
+              {% endif %}
+              {% if d.error %}
+              &nbsp;&mdash; <span style="color:#b91c1c">{{ d.error }}</span>
+              {% endif %}
+            </div>
+            <!-- Manual extract/chunk for debugging, collapsed by default -->
+            <details>
+              <summary>Advanced</summary>
+              <div class="advanced-actions">
+                <form action="/ui/docs/{{ d.id }}/extract" method="post">
+                  <button type="submit">Re-extract</button>
+                </form>
+                <form action="/ui/docs/{{ d.id }}/chunk" method="post">
+                  <button type="submit">Re-chunk</button>
+                </form>
+              </div>
+            </details>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Admin actions -->
+        <div class="action-row">
+          <form action="/ui/rebuild" method="post">
+            <button type="submit">Rebuild Index</button>
+          </form>
+          <form action="/ui/clear" method="post"
+                onsubmit="return confirm('Delete ALL documents, chunks, and index?');">
+            <button type="submit" class="btn-danger">Clear All</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right: search + ask -->
+      <div class="card">
+
+        <!-- Tab bar -->
+        <div class="tabs">
+          <button type="button" class="tab-btn {% if active_tab != 'search' %}active{% endif %}"
+                  onclick="showTab('ask')">Ask</button>
+          <button type="button" class="tab-btn {% if active_tab == 'search' %}active{% endif %}"
+                  onclick="showTab('search')">Search</button>
+        </div>
+
+        <!-- Ask tab -->
+        <div id="tab-ask" {% if active_tab == 'search' %}style="display:none"{% endif %}>
+          <div class="panel-label">Ask a question &mdash; get a cited answer</div>
+          <form action="/ui/answer" method="post">
+            <div class="query-row">
+              <input type="text" name="query" placeholder="What does the document say about...?" required
+                     {% if result %}value="{{ result.query }}"{% endif %} />
+              <button type="submit">Ask</button>
+            </div>
+          </form>
+
+          {% if result %}
+            <div class="answer-text">{{ result.answer }}</div>
+
+            {% if result.citations %}
+            <div style="font-size:12px; color:#888; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;">
+              Sources ({{ result.citations|length }})
+            </div>
+            <div class="citation-list">
+              {% for c in result.citations %}
+              <div class="citation-item">
+                <div class="citation-header">
+                  <span class="citation-n">[{{ c.n }}]</span>
+                  <span class="citation-title">{{ c.doc_title }}</span>
+                  {% if c.page_start is not none %}
+                  <span class="citation-pages">pp. {{ c.page_start }}–{{ c.page_end }}</span>
+                  {% endif %}
+                  <span class="citation-score">score: {{ "%.3f"|format(c.score) }}</span>
+                </div>
+                <div class="citation-snippet">{{ c.snippet }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <!-- Search tab -->
+        <div id="tab-search" {% if active_tab != 'search' %}style="display:none"{% endif %}>
+          <div class="panel-label">Raw semantic search &mdash; retrieval without generation</div>
+          <form action="/ui/search" method="post">
+            <div class="query-row">
+              <input type="text" name="query" placeholder="Search for chunks..." required
+                     {% if search_result %}value="{{ search_result.query }}"{% endif %} />
+              <button type="submit">Search</button>
+            </div>
+          </form>
+
+          {% if search_result %}
+            {% if search_result.hits %}
+            <div style="font-size:12px; color:#888; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;">
+              Top {{ search_result.hits|length }} results
+            </div>
+            <div class="search-hits">
+              {% for h in search_result.hits %}
+              <div class="hit-item">
+                <div class="hit-header">
+                  <span class="hit-doc">{{ h.doc_title }}</span>
+                  {% if h.page_start is not none %}
+                  <span class="hit-pages">pp. {{ h.page_start }}–{{ h.page_end }}</span>
+                  {% endif %}
+                  <span class="hit-score">&#x2248; {{ "%.3f"|format(h.score) }}</span>
+                </div>
+                <div class="hit-snippet">{{ h.snippet }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p style="color:#888; font-size:14px;">No results found.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      function showTab(name) {
+        document.getElementById('tab-ask').style.display    = name === 'ask'    ? '' : 'none';
+        document.getElementById('tab-search').style.display = name === 'search' ? '' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(function(btn, i) {
+          btn.classList.toggle('active', (i === 0) === (name === 'ask'));
+        });
+      }
+    </script>
+  </body>
+</html>

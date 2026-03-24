@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('filename', sa.String(length=255), nullable=True),
-    sa.Column('status', sa.Enum('processing', 'indexed', 'failed', name='document_status'), nullable=False),
+    sa.Column('status', sa.Enum('uploaded', 'processing', 'ready', 'failed', name='document_status'), nullable=False),
     sa.Column('page_count', sa.Integer(), nullable=True),
     sa.Column('error', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
